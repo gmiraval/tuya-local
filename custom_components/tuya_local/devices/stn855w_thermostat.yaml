@@ -1,0 +1,303 @@
+name: Thermostat
+products:
+  - id: paexrbfoogvpmzte
+    manufacturer: ALRE
+    model: STN855W-C
+
+entities:
+  # ── ENTIDAD PRINCIPAL: CLIMATE ────────────────────────────────
+  - entity: climate
+    translation_key: thermostat
+    dps:
+      - id: 2
+        type: string
+        name: hvac_mode
+        mapping:
+          - dps_val: off
+            value: "off"
+          - dps_val: heat
+            value: heat
+          - dps_val: cold
+            value: cool
+          - dps_val: auto_heat
+            value: heat_cool
+
+      # Setpoint calor — DP 54 (Actúa como Dial Único Principal)
+      - id: 54
+        type: integer
+        optional: true
+        name: temperature
+        mapping:
+          - constraint: hvac_mode
+            conditions:
+              - dps_val: cold 
+                value_redirect: cool_set_temp
+            scale: 10
+            step: 5
+            range:
+              min: 50
+              max: 350
+
+      # Setpoint frío — DP 57 (Espejo pasivo, no redirecciona de vuelta)
+      - id: 57
+        type: integer
+        optional: true
+        name: cool_set_temp
+        mapping:
+          - scale: 10
+            step: 5
+            range:
+              min: 50
+              max: 320
+
+      - id: 24
+        type: integer
+        name: current_temperature
+        mapping:
+          - constraint: temperature_unit
+            conditions:
+              - dps_val: f
+                value_redirect: temp_cur_f
+            scale: 10
+            range:
+              min: 0
+              max: 800
+
+      - id: 23
+        type: string
+        optional: true
+        name: temperature_unit
+        mapping:
+          - dps_val: f
+            value: F
+          - value: C
+
+      - id: 29
+        type: integer
+        optional: true
+        name: temp_cur_f
+        mapping:
+          - scale: 10
+
+      - id: 58
+        type: string
+        optional: true
+        name: preset_mode
+        mapping:
+          - dps_val: manual
+            value: manual
+          - dps_val: program
+            value: program
+          - dps_val: temporary
+            value: temporary
+
+      - id: 64
+        type: string
+        optional: true
+        name: fan_mode
+        mapping:
+          - dps_val: fan_auto
+            value: auto
+          - dps_val: fan_on
+            value: "on"
+
+      # Estado activo — muestra llama/copo sobre el ícono
+      - id: 105
+        type: string
+        optional: true
+        name: hvac_action
+        mapping:
+          - dps_val: "off"
+            value: idle
+          - dps_val: on1
+            constraint: hvac_mode
+            conditions:
+              - dps_val: heat
+                value: heating
+              - dps_val: auto_heat
+                value: heating
+              - dps_val: cold
+                value: cooling
+            value: idle
+          - dps_val: on2
+            constraint: hvac_mode
+            conditions:
+              - dps_val: heat
+                value: heating
+              - dps_val: auto_heat
+                value: heating
+              - dps_val: cold
+                value: cooling
+            value: idle
+
+  # ── MONITOREO DE RELÉS Y HARDWARE ─────────────────────────────
+  - entity: sensor
+    name: System Relay
+    icon: "mdi:valve"
+    class: enum            # <--- Agregado obligatorio para HA
+    category: diagnostic
+    dps:
+      - id: 105
+        type: string
+        name: sensor
+        mapping:
+          - dps_val: off
+            value: "off"
+          - dps_val: on1
+            value: stage_1
+          - dps_val: on2
+            value: stage_2
+
+
+  - entity: sensor
+    name: Fan Relay
+    icon: "mdi:fan-clock"
+    class: enum            # <--- Agregado obligatorio para HA
+    category: diagnostic
+    dps:
+      - id: 106
+        type: string
+        optional: true
+        name: sensor
+        mapping:
+          - dps_val: off
+            value: "off"
+          - dps_val: on1
+            value: low
+          - dps_val: on2
+            value: high
+
+
+  # # ── SETPOINTS SECUNDARIOS Y CONFIGURACIÓN CLIMÁTICA ───────────
+  # - entity: number
+  #   name: Backup Single-Stage Setpoint
+  #   icon: "mdi:thermometer-cog"
+  #   class: temperature
+  #   category: config
+  #   dps:
+  #     - id: 16
+  #       type: integer
+  #       optional: true
+  #       name: value
+  #       scale: 10
+  #       range:
+  #         min: 50
+  #         max: 350
+
+  # - entity: number
+  #   name: Heat Swing
+  #   icon: "mdi:thermometer-lines"
+  #   category: config
+  #   dps:
+  #     - id: 110
+  #       type: integer
+  #       name: value
+  #       scale: 10
+  #       range:
+  #         min: 2
+  #         max: 20
+
+  # - entity: number
+  #   name: Cool Swing
+  #   icon: "mdi:thermometer-lines"
+  #   category: config
+  #   dps:
+  #     - id: 111
+  #       type: integer
+  #       name: value
+  #       scale: 10
+  #       range:
+  #         min: 2
+  #         max: 20
+
+  # - entity: number
+  #   name: Temperature Calibration
+  #   icon: "mdi:calculator-variant"
+  #   class: temperature
+  #   category: config
+  #   dps:
+  #     - id: 27
+  #       type: integer
+  #       name: value
+  #       scale: 10
+  #       range:
+  #         min: -30
+  #         max: 30
+
+  # ── CONTROLES DE INTERFAZ Y RESTRICCIONES ─────────────────────
+  - entity: switch
+    name: Child Lock
+    icon: "mdi:lock"
+    category: config
+    dps:
+      - id: 40
+        type: boolean
+        name: switch
+
+  - entity: switch
+    name: Backlight
+    icon: "mdi:lightbulb-outline"
+    category: config
+    dps:
+      - id: 108
+        type: boolean
+        optional: true
+        name: switch
+
+  - entity: switch
+    name: Morning Recovery
+    icon: "mdi:sun-clock"
+    category: config
+    dps:
+      - id: 109
+        type: boolean
+        optional: true
+        name: switch
+
+#  - entity: select
+#    name: Time Format
+#    icon: "mdi:clock-digital"
+#    category: config
+#    dps:
+#      - id: 107
+#        type: string
+#        name: select
+#        options:
+#          - dps_val: 12h
+#            value: "12-Hour"
+#          - dps_val: 24h
+#            value: "24-Hour"
+
+#  - entity: select
+#    name: System Switch Permitted Modes
+#    icon: "mdi:shield-tune"
+#    category: config
+#    dps:
+#      - id: 104
+#        type: string
+#        name: select
+#        options:
+#          - dps_val: heat_cool_off
+#            value: "Heat/Cool/Off"
+#          - dps_val: heat_off
+#            value: "Heat/Off"
+#          - dps_val: cool_off
+#            value: "Cool/Off"
+#          - dps_val: heat_cool_atuo_off
+#            value: "Heat/Cool/Auto/Off"
+#          - dps_val: auto
+#            value: "Auto Only"
+#          - dps_val: heat_cool_auto_em_off
+#            value: "All Modes (inc. Emergency)"
+
+  # ── DIAGNÓSTICO Y ALERTAS ─────────────────────────────────────
+  - entity: binary_sensor
+    name: Device Fault
+    class: problem
+    category: diagnostic
+    dps:
+      - id: 45
+        type: bitfield
+        optional: true
+        name: sensor
+
