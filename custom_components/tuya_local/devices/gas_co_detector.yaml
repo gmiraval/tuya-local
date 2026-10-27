@@ -1,0 +1,60 @@
+name: Gas and CO detector
+products:
+  - id: d9za8jysxxcyqhhh
+    name: Gas sensor
+entities:
+  - entity: binary_sensor
+    class: gas
+    name: Gas alarm
+    dps:
+      - id: 2
+        type: string
+        name: sensor
+        mapping:
+          - dps_val: alarm
+            value: true
+          - dps_val: normal
+            value: false
+  - entity: sensor
+    name: Gas concentration
+    icon: "mdi:molecule"
+    dps:
+      - id: 5
+        type: integer
+        name: sensor
+        unit: "%"
+        class: measurement
+        mapping:
+          - scale: 1000
+  - entity: binary_sensor
+    class: carbon_monoxide
+    name: CO alarm
+    dps:
+      - id: 6
+        type: string
+        name: sensor
+        mapping:
+          - dps_val: alarm
+            value: true
+          - dps_val: normal
+            value: false
+  - entity: sensor
+    class: carbon_monoxide
+    name: CO
+    dps:
+      - id: 20
+        type: integer
+        name: sensor
+        unit: ppm
+        class: measurement
+        mapping:
+          - scale: 100
+  - entity: binary_sensor
+    name: Preheat
+    category: diagnostic
+    dps:
+      - id: 10
+        type: boolean
+        name: sensor
+        optional: true
+
